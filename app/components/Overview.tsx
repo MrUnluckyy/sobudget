@@ -16,7 +16,8 @@ export function Overview({ data, monthKey: mk, isMobile }: OverviewProps) {
   const { transactions: txns, categories, members, budgets } = data
   const { income, expense, net } = useMemo(() => summaryForMonth(txns, mk), [txns, mk])
   const breakdown = useMemo(() => catBreakdown(txns, mk, categories), [txns, mk, categories])
-  const totalBudget = useMemo(() => Object.values(budgets).reduce((s, v) => s + v, 0), [budgets])
+  const expenseCatIds = useMemo(() => new Set(categories.filter(c => c.type === 'expense').map(c => c.id)), [categories])
+  const totalBudget = useMemo(() => Object.entries(budgets).filter(([id]) => expenseCatIds.has(id)).reduce((s, [, v]) => s + v, 0), [budgets, expenseCatIds])
 
   const barData = useMemo(() => {
     const now = new Date(mk + '-01')
