@@ -144,7 +144,7 @@ export function BudgetApp() {
   }
   const isCurrentMonth = currentMonth === toMonthKey(new Date())
   const net = summaryForMonth(data.transactions, currentMonth).net
-  const memberLabel = session?.user?.user_metadata?.member_id === 'partner' ? 'Partner' : 'Me'
+  const memberLabel = session?.user?.user_metadata?.member_id === 'partner' ? 'Kornelija' : 'Justas'
 
   // ── Render ────────────────────────────────────────────────────────────────
   if (authLoading) return null

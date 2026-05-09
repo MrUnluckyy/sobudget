@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { parseEntry, fmt, type Category, type Member, type Transaction } from '../lib/data'
 
-const HINTS = ['salary 3200 income', 'rent 1200', 'groceries 85', 'coffee 3.80', 'netflix 15.99']
+const HINTS = ['salary 1500 income', 'lizingas 87,29 housing', 'personal 300', 'car 400 car loan', 'invest 300 savings']
 
 interface QuickEntryProps {
   categories: Category[]

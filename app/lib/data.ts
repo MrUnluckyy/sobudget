@@ -142,8 +142,8 @@ export const DEFAULT_CATEGORIES: Category[] = [
 ]
 
 export const DEFAULT_MEMBERS: Member[] = [
-  { id: 'me',      name: 'Me'      },
-  { id: 'partner', name: 'Partner' },
+  { id: 'me',      name: 'Justas'    },
+  { id: 'partner', name: 'Kornelija' },
 ]
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
