@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import {
-  DEFAULT_CATEGORIES, DEFAULT_MEMBERS, SAVINGS_OPENING_KEY,
+  DEFAULT_CATEGORIES, DEFAULT_MEMBERS,
   summaryForMonth, fmt, toMonthKey, monthLabel, MONTHS,
   type BudgetState, type Transaction,
 } from './lib/data'
@@ -223,7 +223,7 @@ export function BudgetApp() {
             {view === 'overview'     && <Overview     data={data} monthKey={currentMonth} isMobile={isMobile} />}
             {view === 'transactions' && <Transactions data={data} monthKey={currentMonth} onDelete={deleteTransaction} />}
             {view === 'budget'       && <BudgetView   data={data} monthKey={currentMonth} onUpdateBudget={updateBudget} />}
-            {view === 'savings'      && <Savings      data={data} monthKey={currentMonth} isMobile={isMobile} defaultMemberId={session.user.user_metadata?.member_id} openingBalance={data.budgets[SAVINGS_OPENING_KEY] ?? 0} onUpdateOpening={val => updateBudget(SAVINGS_OPENING_KEY, val)} onAdd={addTransaction} onDelete={deleteTransaction} />}
+            {view === 'savings'      && <Savings      data={data} monthKey={currentMonth} isMobile={isMobile} defaultMemberId={session.user.user_metadata?.member_id} onAdd={addTransaction} onDelete={deleteTransaction} onUpdateMeta={updateBudget} />}
           </>
         )}
       </div>

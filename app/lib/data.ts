@@ -12,7 +12,7 @@ export interface Category {
   id: string
   name: string
   color: string
-  type: 'income' | 'expense'
+  type: 'income' | 'expense' | 'savings'
 }
 
 export interface Member {
@@ -122,6 +122,15 @@ export function parseEntry(text: string, categories: Category[], members: Member
   }
 }
 
+export const SAVINGS_BUCKETS: Category[] = [
+  { id: 'sav_emergency',   name: 'Emergency',      color: 'oklch(62% 0.15 35)',  type: 'savings' },
+  { id: 'sav_holidays',    name: 'Holidays',       color: 'oklch(66% 0.13 200)', type: 'savings' },
+  { id: 'sav_opportunity', name: 'Opportunity',    color: 'oklch(62% 0.15 290)', type: 'savings' },
+  { id: 'sav_gifts',       name: 'Gifts',          color: 'oklch(67% 0.14 350)', type: 'savings' },
+  { id: 'sav_house',       name: 'House Upgrades', color: 'oklch(60% 0.13 250)', type: 'savings' },
+  { id: 'sav_investments', name: 'Investments',    color: 'oklch(60% 0.16 150)', type: 'savings' },
+]
+
 export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'groceries',     name: 'Groceries',              color: 'oklch(65% 0.15 145)', type: 'expense' },
   { id: 'housing',       name: 'Housing',                color: 'oklch(62% 0.14 245)', type: 'expense' },
@@ -131,7 +140,8 @@ export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'pets',          name: 'Pets',                   color: 'oklch(68% 0.15 75)',  type: 'expense' },
   { id: 'transport',     name: 'Transportation',         color: 'oklch(68% 0.14 210)', type: 'expense' },
   { id: 'dining',        name: 'Food & Dining',          color: 'oklch(68% 0.15 60)',  type: 'expense' },
-  { id: 'savings',       name: 'Savings',                color: 'oklch(62% 0.16 155)', type: 'expense' },
+  { id: 'savings',       name: 'Savings',                color: 'oklch(62% 0.16 155)', type: 'savings' },
+  ...SAVINGS_BUCKETS,
   { id: 'house_loan',    name: 'House Loan',             color: 'oklch(58% 0.14 255)', type: 'expense' },
   { id: 'baby',          name: 'Baby',                   color: 'oklch(68% 0.13 355)', type: 'expense' },
   { id: 'car_loan',      name: 'Car Loan',               color: 'oklch(58% 0.10 230)', type: 'expense' },
@@ -273,21 +283,24 @@ export function summaryForMonth(txns: Transaction[], key: string) {
 }
 
 // ─── Savings ──────────────────────────────────────────────────────────────────
-// Deposits are recorded as expenses in the `savings` category (money leaving the
-// monthly cash flow into the pot); withdrawals are recorded as income in the same
-// category (money coming back out of the pot). The opening balance is persisted in
-// the budgets table under a reserved key so no schema change is needed.
-export const SAVINGS_CATEGORY_ID = 'savings'
-export const SAVINGS_OPENING_KEY = '__savings_opening__'
+// Savings is split into named buckets, each its own `type: 'savings'` category.
+// A deposit is an expense tagged with the bucket id (money leaving monthly cash
+// flow into the pot); a withdrawal is income tagged with the bucket id (money
+// coming back out). Per-bucket goal and opening balance are persisted in the
+// budgets table under namespaced keys, so no schema change is needed.
+export const SAVINGS_CATEGORY_ID = 'savings' // legacy single bucket (kept for old data)
 
-export function savingsTxns(txns: Transaction[]): Transaction[] {
-  return txns.filter(t => t.categoryId === SAVINGS_CATEGORY_ID)
+export const savingsGoalKey = (bucketId: string) => `savgoal:${bucketId}`
+export const savingsOpenKey = (bucketId: string) => `savopen:${bucketId}`
+
+export function savingsBuckets(categories: Category[]): Category[] {
+  return categories.filter(c => c.type === 'savings')
 }
 
-export function savingsTotals(txns: Transaction[], opening = 0) {
-  const sav = savingsTxns(txns)
-  const deposited = sav.filter(t => !t.isIncome).reduce((s, t) => s + t.amount, 0)
-  const withdrawn = sav.filter(t => t.isIncome).reduce((s, t) => s + t.amount, 0)
+export function bucketTotals(txns: Transaction[], bucketId: string, opening = 0) {
+  const b = txns.filter(t => t.categoryId === bucketId)
+  const deposited = b.filter(t => !t.isIncome).reduce((s, t) => s + t.amount, 0)
+  const withdrawn = b.filter(t => t.isIncome).reduce((s, t) => s + t.amount, 0)
   return { deposited, withdrawn, balance: opening + deposited - withdrawn }
 }
 
@@ -298,6 +311,7 @@ export function catBreakdown(txns: Transaction[], key: string, categories: Categ
     map[t.categoryId] = (map[t.categoryId] ?? 0) + t.amount
   }
   return categories
+    .filter(c => c.type === 'expense')
     .map(c => ({ ...c, total: map[c.id] ?? 0 }))
     .filter(c => c.total > 0)
     .sort((a, b) => b.total - a.total)
