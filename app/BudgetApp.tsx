@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import {
-  DEFAULT_CATEGORIES, DEFAULT_MEMBERS,
+  DEFAULT_CATEGORIES, DEFAULT_MEMBERS, SAVINGS_OPENING_KEY,
   summaryForMonth, fmt, toMonthKey, monthLabel, MONTHS,
   type BudgetState, type Transaction,
 } from './lib/data'
@@ -16,6 +16,7 @@ import { QuickEntry } from './components/QuickEntry'
 import { Overview } from './components/Overview'
 import { Transactions } from './components/Transactions'
 import { BudgetView } from './components/BudgetView'
+import { Savings } from './components/Savings'
 
 function useIsMobile() {
   const [mobile, setMobile] = useState(false)
@@ -28,12 +29,13 @@ function useIsMobile() {
   return mobile
 }
 
-type Tab = 'overview' | 'transactions' | 'budget'
+type Tab = 'overview' | 'transactions' | 'budget' | 'savings'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'overview',     label: 'Overview' },
   { id: 'transactions', label: 'Transactions' },
   { id: 'budget',       label: 'Budget' },
+  { id: 'savings',      label: 'Savings' },
 ]
 
 const EMPTY_STATE: BudgetState = {
@@ -221,6 +223,7 @@ export function BudgetApp() {
             {view === 'overview'     && <Overview     data={data} monthKey={currentMonth} isMobile={isMobile} />}
             {view === 'transactions' && <Transactions data={data} monthKey={currentMonth} onDelete={deleteTransaction} />}
             {view === 'budget'       && <BudgetView   data={data} monthKey={currentMonth} onUpdateBudget={updateBudget} />}
+            {view === 'savings'      && <Savings      data={data} monthKey={currentMonth} isMobile={isMobile} defaultMemberId={session.user.user_metadata?.member_id} openingBalance={data.budgets[SAVINGS_OPENING_KEY] ?? 0} onUpdateOpening={val => updateBudget(SAVINGS_OPENING_KEY, val)} onAdd={addTransaction} onDelete={deleteTransaction} />}
           </>
         )}
       </div>

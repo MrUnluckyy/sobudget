@@ -240,7 +240,20 @@ export const fmtShort = (n: number) =>
   n >= 1000 ? `€${(n / 1000).toFixed(1)}k` : `€${n.toFixed(0)}`
 
 export function toMonthKey(d: Date): string {
-  return d.toISOString().slice(0, 7)
+  // Use local date components — toISOString() converts to UTC, which shifts
+  // first-of-month dates back a month in timezones ahead of UTC (e.g. UTC+2/+3),
+  // breaking month navigation and chart month keys.
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  return `${y}-${m}`
+}
+
+export function toDateKey(d: Date): string {
+  // Local YYYY-MM-DD — avoids the UTC shift that toISOString() introduces.
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 export function monthLabel(key: string): string {
@@ -257,6 +270,25 @@ export function summaryForMonth(txns: Transaction[], key: string) {
   const income  = month.filter(t => t.isIncome).reduce((s, t) => s + t.amount, 0)
   const expense = month.filter(t => !t.isIncome).reduce((s, t) => s + t.amount, 0)
   return { income, expense, net: income - expense }
+}
+
+// ─── Savings ──────────────────────────────────────────────────────────────────
+// Deposits are recorded as expenses in the `savings` category (money leaving the
+// monthly cash flow into the pot); withdrawals are recorded as income in the same
+// category (money coming back out of the pot). The opening balance is persisted in
+// the budgets table under a reserved key so no schema change is needed.
+export const SAVINGS_CATEGORY_ID = 'savings'
+export const SAVINGS_OPENING_KEY = '__savings_opening__'
+
+export function savingsTxns(txns: Transaction[]): Transaction[] {
+  return txns.filter(t => t.categoryId === SAVINGS_CATEGORY_ID)
+}
+
+export function savingsTotals(txns: Transaction[], opening = 0) {
+  const sav = savingsTxns(txns)
+  const deposited = sav.filter(t => !t.isIncome).reduce((s, t) => s + t.amount, 0)
+  const withdrawn = sav.filter(t => t.isIncome).reduce((s, t) => s + t.amount, 0)
+  return { deposited, withdrawn, balance: opening + deposited - withdrawn }
 }
 
 export function catBreakdown(txns: Transaction[], key: string, categories: Category[]) {

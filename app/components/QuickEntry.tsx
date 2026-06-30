@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect, useRef } from 'react'
-import { parseEntry, fmt, type Category, type Member, type Transaction } from '../lib/data'
+import { parseEntry, fmt, toDateKey, type Category, type Member, type Transaction } from '../lib/data'
 
 const HINTS = ['salary 1500 income', 'lizingas 87,29 housing', 'personal 300', 'car 400 car loan', 'invest 300 savings']
 
@@ -29,7 +29,7 @@ export function QuickEntry({ categories, members, isMobile, defaultMemberId, onA
     if (!parsed?.valid || parsed.amount === null) return
     onAdd({
       id: Date.now().toString(),
-      date: new Date().toISOString().slice(0, 10),
+      date: toDateKey(new Date()),
       description: parsed.description,
       amount: parsed.amount,
       isIncome: parsed.isIncome,
