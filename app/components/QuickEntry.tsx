@@ -13,7 +13,9 @@ interface QuickEntryProps {
 }
 
 export function QuickEntry({ categories, members, isMobile, defaultMemberId, onAdd }: QuickEntryProps) {
+  const today = toDateKey(new Date())
   const [text, setText] = useState('')
+  const [date, setDate] = useState(today)
   const [parsed, setParsed] = useState<ReturnType<typeof parseEntry> | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -29,7 +31,7 @@ export function QuickEntry({ categories, members, isMobile, defaultMemberId, onA
     if (!parsed?.valid || parsed.amount === null) return
     onAdd({
       id: Date.now().toString(),
-      date: toDateKey(new Date()),
+      date: date || today,
       description: parsed.description,
       amount: parsed.amount,
       isIncome: parsed.isIncome,
@@ -60,6 +62,19 @@ export function QuickEntry({ categories, members, isMobile, defaultMemberId, onA
           autoFocus
           className="budget-input"
           style={{ flex: 1, border: 'none', outline: 'none', fontSize: 17, fontFamily: 'var(--font-dm-sans), DM Sans, sans-serif', color: '#1C1C1A', background: 'transparent', letterSpacing: '-0.01em' }}
+        />
+        <input
+          type="date"
+          value={date}
+          max={today}
+          onChange={e => setDate(e.target.value)}
+          title="Transaction date"
+          style={{
+            flexShrink: 0, border: '1px solid #E8E8E4', borderRadius: 10, padding: '8px 10px',
+            fontSize: 13, fontFamily: 'var(--font-dm-sans), DM Sans, sans-serif',
+            color: date === today ? '#888882' : '#1C1C1A', background: '#fff',
+            cursor: 'pointer', letterSpacing: '-0.01em', colorScheme: 'light',
+          }}
         />
         <button
           onClick={submit}
